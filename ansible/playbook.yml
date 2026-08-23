@@ -33,6 +33,11 @@
         state: present
       when: ansible_os_family == "RedHat"
 
+    - name: Install Docker SDK for Python
+      pip:
+        name: docker
+        state: present
+
     - name: Ensure Docker is running
       systemd:
         name: docker
@@ -71,16 +76,20 @@
         state: directory
         mode: "0755"
 
+    - name: Check if docker-compose file exists
+      stat:
+        path: "/opt/{{ app_name }}/docker-compose.yml"
+      register: docker_compose_file
+
     - name: Run container with docker-compose
       community.docker.docker_compose_v2:
-        project_src: /opt/{{ app_name }}
+        project_src: "/opt/{{ app_name }}"
         files:
           - docker-compose.yml
       environment:
         NODE_ENV: production
         NEXTAUTH_SECRET: "{{ vault_nextauth_secret | default('changeme') }}"
         API_BASE_URL: "https://api.nakhlah.net"
-      ignore_errors: yes
       when: docker_compose_file.stat.exists
 
     - name: Fallback: Run container directly
@@ -95,7 +104,7 @@
           NODE_ENV: production
           NEXTAUTH_SECRET: "{{ vault_nextauth_secret | default('changeme') }}"
           API_BASE_URL: "https://api.nakhlah.net"
-      ignore_errors: yes
+      when: not docker_compose_file.stat.exists
 
     - name: Verify container is running
       command: docker ps --filter name={{ container_name }} --format '{% raw %}{{.Status}}{% endraw %}'

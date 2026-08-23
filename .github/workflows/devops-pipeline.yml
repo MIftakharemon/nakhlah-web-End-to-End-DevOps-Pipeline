@@ -66,6 +66,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      image_tag: ${{ steps.meta.outputs.version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -88,6 +90,7 @@ jobs:
           tags: |
             type=ref,event=branch
             type=sha,prefix=
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -116,11 +119,11 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main
-            docker stop nakhlah-app || true
-            docker rm nakhlah-app || true
-            docker run -d --name nakhlah-app -p 3000:3000 \
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            docker stop ${{ env.IMAGE_NAME }} || true
+            docker rm ${{ env.IMAGE_NAME }} || true
+            docker run -d --name ${{ env.IMAGE_NAME }} -p 3000:3000 \
               -e NODE_ENV=production \
               -e NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
               --restart unless-stopped \
-              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
