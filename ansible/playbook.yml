@@ -1,0 +1,107 @@
+---
+- name: Deploy Nakhlah Application
+  hosts: all
+  become: yes
+  vars:
+    app_name: nakhlah
+    app_port: 3000
+    container_name: nakhlah-app
+    ghcr_image: ghcr.io/YOUR_ORG/nakhlah-app:main
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
+    - name: Install Docker (Debian/Ubuntu)
+      apt:
+        name:
+          - docker.io
+          - docker-compose-plugin
+          - python3-pip
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Install Docker (RedHat/CentOS)
+      yum:
+        name:
+          - docker
+          - docker-compose-plugin
+          - python3-pip
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Ensure Docker is running
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add user to docker group
+      user:
+        name: "{{ ansible_user_id }}"
+        groups: docker
+        append: yes
+
+    - name: Login to GHCR
+      community.docker.docker_login:
+        registry_url: ghcr.io
+        username: "{{ lookup('env', 'GHCR_USERNAME') }}"
+        password: "{{ lookup('env', 'GHCR_TOKEN') }}"
+      ignore_errors: yes
+
+    - name: Pull latest image
+      community.docker.docker_image:
+        name: "{{ ghcr_image }}"
+        source: pull
+        force_source: yes
+      ignore_errors: yes
+
+    - name: Stop existing container
+      community.docker.docker_container:
+        name: "{{ container_name }}"
+        state: absent
+      ignore_errors: yes
+
+    - name: Create app directory
+      file:
+        path: "/opt/{{ app_name }}"
+        state: directory
+        mode: "0755"
+
+    - name: Run container with docker-compose
+      community.docker.docker_compose_v2:
+        project_src: /opt/{{ app_name }}
+        files:
+          - docker-compose.yml
+      environment:
+        NODE_ENV: production
+        NEXTAUTH_SECRET: "{{ vault_nextauth_secret | default('changeme') }}"
+        API_BASE_URL: "https://api.nakhlah.net"
+      ignore_errors: yes
+      when: docker_compose_file.stat.exists
+
+    - name: Fallback: Run container directly
+      community.docker.docker_container:
+        name: "{{ container_name }}"
+        image: "{{ ghcr_image }}"
+        state: started
+        restart_policy: unless-stopped
+        ports:
+          - "{{ app_port }}:3000"
+        env:
+          NODE_ENV: production
+          NEXTAUTH_SECRET: "{{ vault_nextauth_secret | default('changeme') }}"
+          API_BASE_URL: "https://api.nakhlah.net"
+      ignore_errors: yes
+
+    - name: Verify container is running
+      command: docker ps --filter name={{ container_name }} --format '{% raw %}{{.Status}}{% endraw %}'
+      register: container_status
+      changed_when: false
+
+    - name: Display container status
+      debug:
+        msg: "Container status: {{ container_status.stdout }}"
