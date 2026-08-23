@@ -1,0 +1,34 @@
+output "vpc_id" {
+  description = "ID of the VPC"
+  value       = module.vpc.vpc_id
+}
+
+output "public_subnets" {
+  description = "List of public subnet IDs"
+  value       = module.vpc.public_subnets
+}
+
+output "private_subnets" {
+  description = "List of private subnet IDs"
+  value       = module.vpc.private_subnets
+}
+
+output "security_group_id" {
+  description = "ID of the security group"
+  value       = module.security_group.security_group_id
+}
+
+output "ec2_instance_id" {
+  description = "ID of the EC2 instance"
+  value       = aws_instance.app_server.id
+}
+
+output "ec2_public_ip" {
+  description = "Public IP of the EC2 instance"
+  value       = aws_instance.app_server.public_ip
+}
+
+output "ec2_private_ip" {
+  description = "Private IP of the EC2 instance"
+  value       = aws_instance.app_server.private_ip
+}

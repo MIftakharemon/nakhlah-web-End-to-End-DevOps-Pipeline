@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.gitignore
+.git
+*.md
+.env*
+.vercel
+.idea
+.vscode
+.pnpm-debug.log*
+coverage
+dist
+build
