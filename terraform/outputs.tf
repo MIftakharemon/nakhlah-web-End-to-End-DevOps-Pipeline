@@ -42,3 +42,13 @@ output "ec2_profile_name" {
   description = "Name of the EC2 instance profile"
   value       = aws_iam_instance_profile.ec2_profile.name
 }
+
+output "ami_id" {
+  description = "AMI ID used for the EC2 instance"
+  value       = data.aws_ami.amazon_linux.id
+}
+
+output "vpc_cidr" {
+  description = "CIDR block of the VPC"
+  value       = module.vpc.vpc_cidr_block
+}
