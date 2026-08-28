@@ -5,6 +5,12 @@ const compat = new FlatCompat({ baseDirectory: import.meta.dirname });
 
 const eslintConfig = defineConfig([
   ...compat.extends("next/core-web-vitals"),
+  {
+    rules: {
+      "prefer-const": "error",
+      "no-var": "error",
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
