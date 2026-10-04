@@ -103,7 +103,6 @@ export default function OTPVerificationPage() {
   const handleConfirm = () => {
     // OTP verification will be implemented later
     // For now, just navigate to reset-password
-    console.log("OTP:", otp.join(""));
     router.push("/auth/reset-password");
   };
 
