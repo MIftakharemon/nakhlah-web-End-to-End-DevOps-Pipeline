@@ -220,6 +220,17 @@ nakhlah-web-End-to-End-DevOps-Pipeline/
 | `NEXTAUTH_URL` | No | `http://localhost:3000` | Auth callback URL |
 | `API_BASE_URL` | No | `https://api.nakhlah.net` | Backend API URL |
 
+## Health Check
+
+The Docker image ships with a `HEALTHCHECK` that probes the app every 30s, so container orchestrators can monitor availability automatically:
+
+```bash
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
+```
+
+Inspect the current status with `docker inspect --format='{{.State.Health.Status}}' <container>`.
+
 ## License
 
 Private - All rights reserved.
