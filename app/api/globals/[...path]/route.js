@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 
 const API_BASE_URL =
-    process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "";
+    process.env.API_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    process.env.API_BASE_URL ||
+    "";
 
 export async function GET(request, { params }) {
     try {
